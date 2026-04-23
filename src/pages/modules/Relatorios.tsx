@@ -17,6 +17,14 @@ import { CHART_ACCENT, CHART_DANGER, CHART_PALETTE, CHART_PRIMARY, CHART_PRIMARY
 import { parseISODateLocal } from "@/lib/utils";
 
 const COLORS = CHART_PALETTE;
+const tooltipStyle = {
+  borderRadius: 12,
+  border: "1px solid hsl(var(--border))",
+  background: "hsl(var(--card))",
+};
+const tooltipTextStyle = {
+  color: "hsl(var(--foreground))",
+};
 
 export default function RelatoriosPage() {
   const {
@@ -150,7 +158,13 @@ export default function RelatoriosPage() {
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                 <XAxis dataKey="season" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} />
                 <YAxis tickFormatter={(value) => `${(Number(value) / 1000).toFixed(0)}k`} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
-                <Tooltip formatter={(value: number) => fmtBRL(value)} contentStyle={{ borderRadius: 12, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }} />
+                <Tooltip
+                  cursor={false}
+                  formatter={(value: number) => fmtBRL(value)}
+                  contentStyle={tooltipStyle}
+                  itemStyle={tooltipTextStyle}
+                  labelStyle={tooltipTextStyle}
+                />
                 <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
                 <Bar dataKey="lucro" name="Lucro" radius={[8, 8, 0, 0]} fill={CHART_PRIMARY} maxBarSize={48} />
                 <Bar dataKey="manejo" name="Manejo" radius={[8, 8, 0, 0]} fill={CHART_PRIMARY_SOFT} maxBarSize={48} />
@@ -166,7 +180,13 @@ export default function RelatoriosPage() {
                 <Pie data={stockByCategory} dataKey="value" nameKey="name" innerRadius={45} outerRadius={90} paddingAngle={3}>
                   {stockByCategory.map((_, index) => <Cell key={index} fill={COLORS[index % COLORS.length]} />)}
                 </Pie>
-                <Tooltip formatter={(value: number) => fmtBRL(value)} contentStyle={{ borderRadius: 12, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }} />
+                <Tooltip
+                  cursor={false}
+                  formatter={(value: number) => fmtBRL(value)}
+                  contentStyle={tooltipStyle}
+                  itemStyle={tooltipTextStyle}
+                  labelStyle={tooltipTextStyle}
+                />
                 <Legend iconType="circle" wrapperStyle={{ fontSize: 11 }} />
               </PieChart>
             </ResponsiveContainer>
@@ -182,7 +202,13 @@ export default function RelatoriosPage() {
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                 <XAxis dataKey="label" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} />
                 <YAxis tickFormatter={(value) => `${(Number(value) / 1000).toFixed(0)}k`} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
-                <Tooltip formatter={(value: number) => fmtBRL(value)} contentStyle={{ borderRadius: 12, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }} />
+                <Tooltip
+                  cursor={false}
+                  formatter={(value: number) => fmtBRL(value)}
+                  contentStyle={tooltipStyle}
+                  itemStyle={tooltipTextStyle}
+                  labelStyle={tooltipTextStyle}
+                />
                 <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
                 <Bar dataKey="pagar" name="A pagar" fill={CHART_DANGER} radius={[8, 8, 0, 0]} maxBarSize={40} />
                 <Bar dataKey="receber" name="A receber" fill={CHART_PRIMARY_SOFT} radius={[8, 8, 0, 0]} maxBarSize={40} />
@@ -198,7 +224,12 @@ export default function RelatoriosPage() {
                 <Pie data={taskStatusData} dataKey="value" nameKey="name" innerRadius={45} outerRadius={90} paddingAngle={3}>
                   {taskStatusData.map((_, index) => <Cell key={index} fill={COLORS[index % COLORS.length]} />)}
                 </Pie>
-                <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }} />
+                <Tooltip
+                  cursor={false}
+                  contentStyle={tooltipStyle}
+                  itemStyle={tooltipTextStyle}
+                  labelStyle={tooltipTextStyle}
+                />
                 <Legend iconType="circle" wrapperStyle={{ fontSize: 11 }} />
               </PieChart>
             </ResponsiveContainer>
@@ -214,7 +245,13 @@ export default function RelatoriosPage() {
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                 <XAxis dataKey="label" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
                 <YAxis tickFormatter={(value) => `${(Number(value) / 1000).toFixed(0)}k`} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
-                <Tooltip formatter={(value: number) => fmtBRL(value)} contentStyle={{ borderRadius: 12, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }} />
+                <Tooltip
+                  cursor={false}
+                  formatter={(value: number) => fmtBRL(value)}
+                  contentStyle={tooltipStyle}
+                  itemStyle={tooltipTextStyle}
+                  labelStyle={tooltipTextStyle}
+                />
                 <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
                 <Line type="monotone" dataKey="receita" name="Receita" stroke={CHART_PRIMARY} strokeWidth={2.5} dot={{ r: 3 }} />
                 <Line type="monotone" dataKey="despesa" name="Despesa" stroke={CHART_DANGER} strokeWidth={2.5} dot={{ r: 3 }} />
@@ -251,7 +288,13 @@ export default function RelatoriosPage() {
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
               <XAxis dataKey="name" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} />
               <YAxis tickFormatter={(value) => `${(Number(value) / 1000).toFixed(0)}k`} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
-              <Tooltip formatter={(value: number) => fmtBRL(value)} contentStyle={{ borderRadius: 12, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }} />
+              <Tooltip
+                cursor={false}
+                formatter={(value: number) => fmtBRL(value)}
+                contentStyle={tooltipStyle}
+                itemStyle={tooltipTextStyle}
+                labelStyle={tooltipTextStyle}
+              />
               <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
               <Bar dataKey="receita" name="Receita" fill={CHART_PRIMARY} radius={[8, 8, 0, 0]} maxBarSize={32} />
               <Bar dataKey="custo" name="Custo lavoura" fill={CHART_DANGER} radius={[8, 8, 0, 0]} maxBarSize={32} />

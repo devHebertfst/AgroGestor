@@ -229,7 +229,7 @@ export default function DashboardPage() {
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                 <XAxis dataKey="label" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
                 <YAxis tickFormatter={(value) => `${(Number(value) / 1000).toFixed(0)}k`} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
-                <Tooltip formatter={(value: number) => fmtBRL(value)} contentStyle={{ borderRadius: 12, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }} />
+                <Tooltip cursor={false} formatter={(value: number) => fmtBRL(value)} contentStyle={{ borderRadius: 12, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }} />
                 <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
                 <Bar dataKey="receitas" name="Receitas" fill={CHART_PRIMARY} radius={[8, 8, 0, 0]} maxBarSize={42} />
                 <Bar dataKey="despesas" name="Despesas" fill={CHART_DANGER} radius={[8, 8, 0, 0]} maxBarSize={42} />
@@ -270,7 +270,7 @@ export default function DashboardPage() {
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                 <XAxis dataKey="season" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} />
                 <YAxis tickFormatter={(value) => `${(Number(value) / 1000).toFixed(0)}k`} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
-                <Tooltip formatter={(value: number) => fmtBRL(value)} contentStyle={{ borderRadius: 12, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }} />
+                <Tooltip cursor={false} formatter={(value: number) => fmtBRL(value)} contentStyle={{ borderRadius: 12, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }} />
                 <Bar dataKey="lucro" name="Lucro" fill={CHART_PRIMARY} radius={[8, 8, 0, 0]} maxBarSize={48} />
               </BarChart>
             </ResponsiveContainer>
@@ -284,7 +284,7 @@ export default function DashboardPage() {
                 <Pie data={expData} dataKey="value" nameKey="name" innerRadius={50} outerRadius={88} paddingAngle={3}>
                   {expData.map((_, index) => <Cell key={index} fill={CHART_PALETTE[index % CHART_PALETTE.length]} />)}
                 </Pie>
-                <Tooltip formatter={(value: number) => fmtBRL(value)} contentStyle={{ borderRadius: 12, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }} />
+                <Tooltip cursor={false} formatter={(value: number) => fmtBRL(value)} contentStyle={{ borderRadius: 12, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }} />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -297,7 +297,7 @@ export default function DashboardPage() {
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                 <XAxis dataKey="label" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} />
                 <YAxis tickFormatter={(value) => `${(Number(value) / 1000).toFixed(0)}k`} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
-                <Tooltip formatter={(value: number) => fmtBRL(value)} contentStyle={{ borderRadius: 12, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }} />
+                <Tooltip cursor={false} formatter={(value: number) => fmtBRL(value)} contentStyle={{ borderRadius: 12, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }} />
                 <Line type="monotone" dataKey="lucro" name="Lucro" stroke={CHART_PRIMARY} strokeWidth={2.5} dot={{ r: 3 }} />
               </LineChart>
             </ResponsiveContainer>

@@ -5,21 +5,20 @@ import { Bell, ChevronRight, LogOut, Moon, Search, Sun } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { useTheme } from "@/context/ThemeContext";
 import { useAuth } from "@/context/AuthContext";
 
 const titles: Record<string, { title: string; subtitle: string; group: string }> = {
-  "/": { title: "Dashboard", subtitle: "Visão estratégica da operação rural", group: "Estratégia" },
-  "/controle": { title: "Centro de Controle", subtitle: "Pendências críticas e acompanhamento operacional", group: "Estratégia" },
-  "/financeiro": { title: "Financeiro", subtitle: "Receitas, despesas, contas e fluxo de caixa", group: "Gestão" },
-  "/estoque": { title: "Estoque", subtitle: "Insumos, materiais, alertas e validade", group: "Gestão" },
-  "/tarefas": { title: "Tarefas", subtitle: "Quadro operacional da fazenda", group: "Gestão" },
-  "/propriedades": { title: "Propriedades", subtitle: "Áreas, hectares e talhões", group: "Produção" },
-  "/plantacoes": { title: "Plantações & Safras", subtitle: "Lavouras em andamento e manejos", group: "Produção" },
-  "/rebanho": { title: "Rebanho", subtitle: "Lotes, patrimônio e histórico sanitário", group: "Produção" },
-  "/calendario": { title: "Calendário", subtitle: "Lembretes, atividades e agenda da fazenda", group: "Gestão" },
-  "/relatorios": { title: "Relatórios", subtitle: "Indicadores consolidados da fazenda", group: "Estratégia" },
+  "/": { title: "Dashboard", subtitle: "Visao estrategica da operacao rural", group: "Estrategia" },
+  "/controle": { title: "Centro de Controle", subtitle: "Pendencias criticas e acompanhamento operacional", group: "Estrategia" },
+  "/financeiro": { title: "Financeiro", subtitle: "Receitas, despesas, contas e fluxo de caixa", group: "Gestao" },
+  "/estoque": { title: "Estoque", subtitle: "Insumos, materiais, alertas e validade", group: "Gestao" },
+  "/tarefas": { title: "Tarefas", subtitle: "Quadro operacional da fazenda", group: "Gestao" },
+  "/propriedades": { title: "Propriedades", subtitle: "Areas, hectares e talhoes", group: "Producao" },
+  "/plantacoes": { title: "Plantacoes & Safras", subtitle: "Lavouras em andamento e manejos", group: "Producao" },
+  "/rebanho": { title: "Rebanho", subtitle: "Lotes, patrimonio e historico sanitario", group: "Producao" },
+  "/calendario": { title: "Calendario", subtitle: "Lembretes, atividades e agenda da fazenda", group: "Gestao" },
+  "/relatorios": { title: "Relatorios", subtitle: "Indicadores consolidados da fazenda", group: "Estrategia" },
 };
 
 export default function AppLayout() {
@@ -65,13 +64,10 @@ export default function AppLayout() {
                 <div className="relative hidden lg:block">
                   <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
-                    placeholder="Buscar talhão, lote, lançamento..."
+                    placeholder="Buscar talhao, lote, lancamento..."
                     className="h-9 w-80 rounded-full border-border/80 bg-card/80 pl-9 text-sm shadow-sm"
                   />
                 </div>
-                <Badge className="hidden rounded-full border-primary/20 bg-primary/10 px-3 py-1 text-primary hover:bg-primary/10 md:inline-flex">
-                  Protótipo premium
-                </Badge>
                 <Button variant="ghost" size="icon" className="rounded-full" onClick={toggle} aria-label="Alternar tema">
                   {theme === "dark" ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}
                 </Button>
