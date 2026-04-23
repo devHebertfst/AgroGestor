@@ -3,106 +3,202 @@ import {
   ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
 import { fmtBRL, useFarm } from "@/context/FarmContext";
-import { CATEGORY_LABEL } from "@/data/types";
+import {
+  ACCOUNT_TYPE_LABEL,
+  CATEGORY_LABEL,
+  EVENT_CATEGORY_LABEL,
+  STOCK_CATEGORY_LABEL,
+  TASK_STATUS_LABEL,
+} from "@/data/types";
 import { SectionCard } from "@/components/agro/SectionCard";
 import { StatCard } from "@/components/agro/StatCard";
-import { Beef, Coins, Sprout, TrendingUp } from "lucide-react";
-import { CHART_DANGER, CHART_PALETTE, CHART_PRIMARY } from "@/lib/chart-colors";
+import { Beef, Boxes, CheckSquare, Coins, Sprout, TrendingUp } from "lucide-react";
+import { CHART_ACCENT, CHART_DANGER, CHART_PALETTE, CHART_PRIMARY, CHART_PRIMARY_SOFT } from "@/lib/chart-colors";
 import { parseISODateLocal } from "@/lib/utils";
 
 const COLORS = CHART_PALETTE;
 
 export default function RelatoriosPage() {
-  const { properties, crops, livestock, transactions } = useFarm();
+  const {
+    properties,
+    crops,
+    livestock,
+    transactions,
+    stockItems,
+    accounts,
+    tasks,
+    events,
+    sanitaryRecords,
+    cropManagementRecords,
+  } = useFarm();
 
-  const totalRevenue = transactions.filter((t) => t.type === "receita").reduce((s, t) => s + t.value, 0);
-  const totalExpense = transactions.filter((t) => t.type === "despesa").reduce((s, t) => s + t.value, 0);
+  const totalRevenue = transactions.filter((item) => item.type === "receita").reduce((sum, item) => sum + item.value, 0);
+  const totalExpense = transactions.filter((item) => item.type === "despesa").reduce((sum, item) => sum + item.value, 0);
+  const totalStockValue = stockItems.reduce((sum, item) => sum + item.quantity * item.unitCost, 0);
+  const totalLivestockValue = livestock.reduce((sum, item) => sum + item.estimatedValue * (item.count ?? 1), 0);
+  const sanitaryCost = sanitaryRecords.reduce((sum, item) => sum + item.cost, 0);
+  const managementCost = cropManagementRecords.reduce((sum, item) => sum + item.cost, 0);
 
-  // Lucro por safra
-  const seasonMap = new Map<string, { season: string; lucro: number }>();
-  crops.forEach((c) => {
-    const s = seasonMap.get(c.season) ?? { season: c.season, lucro: 0 };
-    s.lucro += c.estimatedRevenue - c.estimatedCost;
-    seasonMap.set(c.season, s);
+  const seasonMap = new Map<string, { season: string; lucro: number; manejo: number }>();
+  crops.forEach((crop) => {
+    const entry = seasonMap.get(crop.season) ?? { season: crop.season, lucro: 0, manejo: 0 };
+    entry.lucro += crop.estimatedRevenue - crop.estimatedCost;
+    seasonMap.set(crop.season, entry);
+  });
+  cropManagementRecords.forEach((record) => {
+    const crop = crops.find((item) => item.id === record.cropId);
+    if (!crop) return;
+    const entry = seasonMap.get(crop.season) ?? { season: crop.season, lucro: 0, manejo: 0 };
+    entry.manejo += record.cost;
+    seasonMap.set(crop.season, entry);
   });
 
-  // Receita por cultura
-  const cultureMap = new Map<string, number>();
-  crops.forEach((c) => cultureMap.set(c.culture, (cultureMap.get(c.culture) ?? 0) + c.estimatedRevenue));
-  const cultureData = Array.from(cultureMap.entries()).map(([name, value]) => ({ name, value }));
+  const stockByCategory = Object.entries(
+    stockItems.reduce<Record<string, number>>((acc, item) => {
+      acc[item.category] = (acc[item.category] ?? 0) + item.quantity * item.unitCost;
+      return acc;
+    }, {}),
+  ).map(([key, value]) => ({ name: STOCK_CATEGORY_LABEL[key as keyof typeof STOCK_CATEGORY_LABEL] ?? key, value }));
 
-  // Custo por hectare por propriedade
-  const propData = properties.map((p) => {
-    const cropsOfP = crops.filter((c) => c.propertyId === p.id);
-    const ha = cropsOfP.reduce((s, c) => s + c.hectares, 0);
-    const cost = cropsOfP.reduce((s, c) => s + c.estimatedCost, 0);
-    const revenue = cropsOfP.reduce((s, c) => s + c.estimatedRevenue, 0);
+  const accountsByMonth = accounts.reduce<Record<string, { label: string; pagar: number; receber: number }>>((acc, account) => {
+    const date = parseISODateLocal(account.dueDate);
+    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+    acc[key] ??= {
+      label: date.toLocaleDateString("pt-BR", { month: "short" }).replace(".", ""),
+      pagar: 0,
+      receber: 0,
+    };
+    acc[key][account.type] += account.value;
+    return acc;
+  }, {});
+  const accountData = Object.entries(accountsByMonth).sort(([a], [b]) => a.localeCompare(b)).map(([, value]) => value);
+
+  const taskStatusData = Object.entries(
+    tasks.reduce<Record<string, number>>((acc, task) => {
+      acc[task.status] = (acc[task.status] ?? 0) + 1;
+      return acc;
+    }, {}),
+  ).map(([key, value]) => ({ name: TASK_STATUS_LABEL[key as keyof typeof TASK_STATUS_LABEL] ?? key, value }));
+
+  const eventData = Object.entries(
+    events.reduce<Record<string, number>>((acc, event) => {
+      acc[event.category] = (acc[event.category] ?? 0) + 1;
+      return acc;
+    }, {}),
+  ).map(([key, value]) => ({ name: EVENT_CATEGORY_LABEL[key as keyof typeof EVENT_CATEGORY_LABEL] ?? key, value }));
+
+  const propData = properties.map((property) => {
+    const cropsOfProperty = crops.filter((crop) => crop.propertyId === property.id);
+    const accountsOfProperty = accounts.filter((account) => account.propertyId === property.id);
+    const stockOfProperty = stockItems.filter((item) => item.propertyId === property.id);
     return {
-      name: p.name,
-      custoHa: ha ? Math.round(cost / ha) : 0,
-      receita: revenue,
-      custo: cost,
+      name: property.name,
+      receita: cropsOfProperty.reduce((sum, crop) => sum + crop.estimatedRevenue, 0),
+      custo: cropsOfProperty.reduce((sum, crop) => sum + crop.estimatedCost, 0),
+      contas: accountsOfProperty.reduce((sum, account) => sum + account.value, 0),
+      estoque: stockOfProperty.reduce((sum, item) => sum + item.quantity * item.unitCost, 0),
     };
   });
 
-  // Despesas por categoria
-  const expCat = new Map<string, number>();
-  transactions.filter((t) => t.type === "despesa").forEach((t) =>
-    expCat.set(t.category, (expCat.get(t.category) ?? 0) + t.value));
-  const expData = Array.from(expCat.entries()).map(([k, v]) => ({
-    name: CATEGORY_LABEL[k as keyof typeof CATEGORY_LABEL] ?? k, value: v,
-  }));
+  const expData = Object.entries(
+    transactions.filter((item) => item.type === "despesa").reduce<Record<string, number>>((acc, item) => {
+      acc[item.category] = (acc[item.category] ?? 0) + item.value;
+      return acc;
+    }, {}),
+  ).map(([key, value]) => ({ name: CATEGORY_LABEL[key as keyof typeof CATEGORY_LABEL] ?? key, value }));
 
-  // Receita acumulada (linha)
   const monthly: { label: string; key: string; receita: number; despesa: number }[] = [];
   const now = new Date();
-  for (let i = 11; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+  for (let index = 11; index >= 0; index--) {
+    const date = new Date(now.getFullYear(), now.getMonth() - index, 1);
     monthly.push({
-      label: d.toLocaleDateString("pt-BR", { month: "short" }).replace(".", ""),
-      key: `${d.getFullYear()}-${d.getMonth()}`, receita: 0, despesa: 0,
+      label: date.toLocaleDateString("pt-BR", { month: "short" }).replace(".", ""),
+      key: `${date.getFullYear()}-${date.getMonth()}`,
+      receita: 0,
+      despesa: 0,
     });
   }
-  transactions.forEach((t) => {
-    const d = parseISODateLocal(t.date);
-    const m = monthly.find((x) => x.key === `${d.getFullYear()}-${d.getMonth()}`);
-    if (m) { if (t.type === "receita") m.receita += t.value; else m.despesa += t.value; }
+  transactions.forEach((item) => {
+    const date = parseISODateLocal(item.date);
+    const month = monthly.find((entry) => entry.key === `${date.getFullYear()}-${date.getMonth()}`);
+    if (!month) return;
+    if (item.type === "receita") month.receita += item.value;
+    else month.despesa += item.value;
   });
-
-  const totalLivestockValue = livestock.reduce((s, l) => s + l.estimatedValue * (l.count ?? 1), 0);
 
   return (
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Receita total" value={fmtBRL(totalRevenue)} icon={TrendingUp} tone="success" />
+        <StatCard label="Valor total do estoque" value={fmtBRL(totalStockValue)} icon={Boxes} tone="primary" />
+        <StatCard label="Custo sanitário" value={fmtBRL(sanitaryCost)} icon={Beef} tone="warning" />
+        <StatCard label="Custo de manejo" value={fmtBRL(managementCost)} icon={Sprout} tone="accent" />
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Lucro consolidado" value={fmtBRL(totalRevenue - totalExpense)} icon={Coins} tone="primary" />
-        <StatCard label="Hectares produtivos" value={`${crops.reduce((s, c) => s + c.hectares, 0)} ha`} icon={Sprout} tone="accent" />
+        <StatCard label="Hectares produtivos" value={`${crops.reduce((sum, crop) => sum + crop.hectares, 0)} ha`} icon={Sprout} tone="accent" />
         <StatCard label="Patrimônio rebanho" value={fmtBRL(totalLivestockValue)} icon={Beef} tone="warning" />
+        <StatCard label="Tarefas cadastradas" value={String(tasks.length)} icon={CheckSquare} tone="muted" />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
-        <SectionCard title="Lucro por safra" subtitle="Estimativa receita − custo" className="lg:col-span-2">
+        <SectionCard title="Lucro e manejo por safra" subtitle="Estimativas consolidadas" className="lg:col-span-2">
           <div className="h-72">
             <ResponsiveContainer>
               <BarChart data={Array.from(seasonMap.values())}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                 <XAxis dataKey="season" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} />
-                <YAxis tickFormatter={(v) => `${(v/1000).toFixed(0)}k`} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
-                <Tooltip formatter={(v: number) => fmtBRL(v)} contentStyle={{ borderRadius: 12, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }} />
-                <Bar dataKey="lucro" radius={[8,8,0,0]} fill={CHART_PRIMARY} maxBarSize={60} />
+                <YAxis tickFormatter={(value) => `${(Number(value) / 1000).toFixed(0)}k`} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+                <Tooltip formatter={(value: number) => fmtBRL(value)} contentStyle={{ borderRadius: 12, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }} />
+                <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
+                <Bar dataKey="lucro" name="Lucro" radius={[8, 8, 0, 0]} fill={CHART_PRIMARY} maxBarSize={48} />
+                <Bar dataKey="manejo" name="Manejo" radius={[8, 8, 0, 0]} fill={CHART_PRIMARY_SOFT} maxBarSize={48} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </SectionCard>
 
-        <SectionCard title="Receita por cultura">
+        <SectionCard title="Estoque por categoria">
           <div className="h-72">
             <ResponsiveContainer>
               <PieChart>
-                <Pie data={cultureData} dataKey="value" nameKey="name" innerRadius={45} outerRadius={90} paddingAngle={3}>
-                  {cultureData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                <Pie data={stockByCategory} dataKey="value" nameKey="name" innerRadius={45} outerRadius={90} paddingAngle={3}>
+                  {stockByCategory.map((_, index) => <Cell key={index} fill={COLORS[index % COLORS.length]} />)}
                 </Pie>
-                <Tooltip formatter={(v: number) => fmtBRL(v)} contentStyle={{ borderRadius: 12, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }} />
+                <Tooltip formatter={(value: number) => fmtBRL(value)} contentStyle={{ borderRadius: 12, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }} />
+                <Legend iconType="circle" wrapperStyle={{ fontSize: 11 }} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </SectionCard>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-3">
+        <SectionCard title="Contas por vencimento" subtitle={`${ACCOUNT_TYPE_LABEL.pagar} vs ${ACCOUNT_TYPE_LABEL.receber}`} className="lg:col-span-2">
+          <div className="h-72">
+            <ResponsiveContainer>
+              <BarChart data={accountData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                <XAxis dataKey="label" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} />
+                <YAxis tickFormatter={(value) => `${(Number(value) / 1000).toFixed(0)}k`} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+                <Tooltip formatter={(value: number) => fmtBRL(value)} contentStyle={{ borderRadius: 12, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }} />
+                <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
+                <Bar dataKey="pagar" name="A pagar" fill={CHART_DANGER} radius={[8, 8, 0, 0]} maxBarSize={40} />
+                <Bar dataKey="receber" name="A receber" fill={CHART_PRIMARY_SOFT} radius={[8, 8, 0, 0]} maxBarSize={40} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </SectionCard>
+
+        <SectionCard title="Tarefas por status">
+          <div className="h-72">
+            <ResponsiveContainer>
+              <PieChart>
+                <Pie data={taskStatusData} dataKey="value" nameKey="name" innerRadius={45} outerRadius={90} paddingAngle={3}>
+                  {taskStatusData.map((_, index) => <Cell key={index} fill={COLORS[index % COLORS.length]} />)}
+                </Pie>
+                <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }} />
                 <Legend iconType="circle" wrapperStyle={{ fontSize: 11 }} />
               </PieChart>
             </ResponsiveContainer>
@@ -117,8 +213,8 @@ export default function RelatoriosPage() {
               <LineChart data={monthly}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                 <XAxis dataKey="label" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
-                <YAxis tickFormatter={(v) => `${(v/1000).toFixed(0)}k`} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
-                <Tooltip formatter={(v: number) => fmtBRL(v)} contentStyle={{ borderRadius: 12, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }} />
+                <YAxis tickFormatter={(value) => `${(Number(value) / 1000).toFixed(0)}k`} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+                <Tooltip formatter={(value: number) => fmtBRL(value)} contentStyle={{ borderRadius: 12, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }} />
                 <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
                 <Line type="monotone" dataKey="receita" name="Receita" stroke={CHART_PRIMARY} strokeWidth={2.5} dot={{ r: 3 }} />
                 <Line type="monotone" dataKey="despesa" name="Despesa" stroke={CHART_DANGER} strokeWidth={2.5} dot={{ r: 3 }} />
@@ -127,19 +223,19 @@ export default function RelatoriosPage() {
           </div>
         </SectionCard>
 
-        <SectionCard title="Despesas por categoria">
+        <SectionCard title="Eventos por tipo">
           <div className="space-y-2">
-            {expData.sort((a, b) => b.value - a.value).map((e, i) => {
-              const max = Math.max(...expData.map((x) => x.value));
-              const pct = max > 0 ? (e.value / max) * 100 : 0;
+            {eventData.sort((a, b) => b.value - a.value).map((item, index) => {
+              const max = Math.max(...eventData.map((entry) => entry.value), 1);
+              const pct = (item.value / max) * 100;
               return (
-                <div key={e.name}>
+                <div key={item.name}>
                   <div className="mb-1 flex justify-between text-xs">
-                    <span className="text-muted-foreground">{e.name}</span>
-                    <span className="font-semibold">{fmtBRL(e.value)}</span>
+                    <span className="text-muted-foreground">{item.name}</span>
+                    <span className="font-semibold">{item.value}</span>
                   </div>
                   <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
-                    <div className="h-full rounded-full" style={{ width: `${pct}%`, background: COLORS[i % COLORS.length] }} />
+                    <div className="h-full rounded-full" style={{ width: `${pct}%`, background: COLORS[index % COLORS.length] }} />
                   </div>
                 </div>
               );
@@ -148,19 +244,40 @@ export default function RelatoriosPage() {
         </SectionCard>
       </div>
 
-      <SectionCard title="Comparação entre propriedades" subtitle="Receita, custo e custo/ha">
+      <SectionCard title="Comparativo entre propriedades" subtitle="Receita, custo, contas e estoque">
         <div className="h-72">
           <ResponsiveContainer>
             <BarChart data={propData}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
               <XAxis dataKey="name" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} />
-              <YAxis tickFormatter={(v) => `${(v/1000).toFixed(0)}k`} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
-              <Tooltip formatter={(v: number) => fmtBRL(v)} contentStyle={{ borderRadius: 12, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }} />
+              <YAxis tickFormatter={(value) => `${(Number(value) / 1000).toFixed(0)}k`} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+              <Tooltip formatter={(value: number) => fmtBRL(value)} contentStyle={{ borderRadius: 12, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }} />
               <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
-              <Bar dataKey="receita" name="Receita" fill={CHART_PRIMARY} radius={[8,8,0,0]} maxBarSize={36} />
-              <Bar dataKey="custo" name="Custo" fill={CHART_DANGER} radius={[8,8,0,0]} maxBarSize={36} />
+              <Bar dataKey="receita" name="Receita" fill={CHART_PRIMARY} radius={[8, 8, 0, 0]} maxBarSize={32} />
+              <Bar dataKey="custo" name="Custo lavoura" fill={CHART_DANGER} radius={[8, 8, 0, 0]} maxBarSize={32} />
+              <Bar dataKey="estoque" name="Estoque" fill={CHART_ACCENT} radius={[8, 8, 0, 0]} maxBarSize={32} />
             </BarChart>
           </ResponsiveContainer>
+        </div>
+      </SectionCard>
+
+      <SectionCard title="Despesas por categoria">
+        <div className="space-y-2">
+          {expData.sort((a, b) => b.value - a.value).map((item, index) => {
+            const max = Math.max(...expData.map((entry) => entry.value), 1);
+            const pct = (item.value / max) * 100;
+            return (
+              <div key={item.name}>
+                <div className="mb-1 flex justify-between text-xs">
+                  <span className="text-muted-foreground">{item.name}</span>
+                  <span className="font-semibold">{fmtBRL(item.value)}</span>
+                </div>
+                <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
+                  <div className="h-full rounded-full" style={{ width: `${pct}%`, background: COLORS[index % COLORS.length] }} />
+                </div>
+              </div>
+            );
+          })}
         </div>
       </SectionCard>
     </div>

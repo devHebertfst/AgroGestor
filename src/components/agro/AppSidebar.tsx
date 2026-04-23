@@ -2,6 +2,8 @@ import {
   BarChart3,
   Beef,
   CalendarDays,
+  CheckSquare,
+  Boxes,
   LayoutDashboard,
   Leaf,
   MapPinned,
@@ -25,6 +27,8 @@ import { cn } from "@/lib/utils";
 const items = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard, end: true },
   { title: "Financeiro", url: "/financeiro", icon: Wallet },
+  { title: "Estoque", url: "/estoque", icon: Boxes },
+  { title: "Tarefas", url: "/tarefas", icon: CheckSquare },
   { title: "Propriedades", url: "/propriedades", icon: MapPinned },
   { title: "Plantações", url: "/plantacoes", icon: Sprout },
   { title: "Rebanho", url: "/rebanho", icon: Beef },

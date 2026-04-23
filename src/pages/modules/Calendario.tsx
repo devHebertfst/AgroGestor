@@ -51,11 +51,14 @@ import { toast } from "sonner";
 const categoryTone: Record<EventCategory, string> = {
   plantio: "bg-success/15 text-success border-success/30",
   colheita: "bg-accent/15 text-accent border-accent/30",
+  adubacao: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30",
+  pulverizacao: "bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-500/30",
   vacinacao: "bg-primary/10 text-primary border-primary/30",
+  pesagem: "bg-violet-500/15 text-violet-700 dark:text-violet-300 border-violet-500/30",
   manutencao: "bg-warning/15 text-warning border-warning/30",
-  financeiro: "bg-danger/10 text-danger border-danger/30",
-  reuniao: "bg-secondary text-foreground border-border",
-  outro: "bg-muted text-muted-foreground border-border",
+  pagamento: "bg-danger/10 text-danger border-danger/30",
+  recebimento: "bg-success/15 text-success border-success/30",
+  tarefa: "bg-muted text-muted-foreground border-border",
 };
 
 const priorityTone: Record<EventPriority, string> = {
@@ -68,7 +71,7 @@ const isoOf = (date: Date) =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 
 export default function CalendarioPage() {
-  const { events, properties, addEvent, removeEvent, toggleEventDone } = useFarm();
+  const { events, properties, crops, livestock, addEvent, removeEvent, toggleEventDone } = useFarm();
   const [cursor, setCursor] = useState(() => {
     const date = new Date();
     date.setDate(1);
@@ -76,6 +79,13 @@ export default function CalendarioPage() {
   });
   const [selected, setSelected] = useState<Date>(new Date());
   const [open, setOpen] = useState(false);
+  const [filterCategory, setFilterCategory] = useState<"all" | EventCategory>("all");
+  const [filterProperty, setFilterProperty] = useState("all");
+
+  const filteredEvents = useMemo(() => events.filter((event) =>
+    (filterCategory === "all" || event.category === filterCategory) &&
+    (filterProperty === "all" || event.propertyId === filterProperty)
+  ), [events, filterCategory, filterProperty]);
 
   const grid = useMemo(() => {
     const first = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
@@ -91,14 +101,14 @@ export default function CalendarioPage() {
   const eventsByDay = useMemo(() => {
     const map = new Map<string, FarmEvent[]>();
 
-    events.forEach((event) => {
+    filteredEvents.forEach((event) => {
       const items = map.get(event.date) ?? [];
       items.push(event);
       map.set(event.date, items);
     });
 
     return map;
-  }, [events]);
+  }, [filteredEvents]);
 
   const selectedISO = isoOf(selected);
   const dayEvents = [...(eventsByDay.get(selectedISO) ?? [])].sort((a, b) =>
@@ -108,22 +118,22 @@ export default function CalendarioPage() {
   const upcoming = useMemo(() => {
     const todayISO = isoOf(new Date());
 
-    return [...events]
+    return [...filteredEvents]
       .filter((event) => event.date >= todayISO && !event.done)
       .sort((a, b) => a.date.localeCompare(b.date) || (a.time ?? "").localeCompare(b.time ?? ""))
       .slice(0, 6);
-  }, [events]);
+  }, [filteredEvents]);
 
   const monthLabel = format(cursor, "MMMM yyyy", { locale: ptBR });
   const weekDays = ["D", "S", "T", "Q", "Q", "S", "S"];
-  const totalAlta = events.filter((event) => event.priority === "alta" && !event.done).length;
-  const todoCount = events.filter((event) => !event.done).length;
-  const doneCount = events.filter((event) => event.done).length;
+  const totalAlta = filteredEvents.filter((event) => event.priority === "alta" && !event.done).length;
+  const todoCount = filteredEvents.filter((event) => !event.done).length;
+  const doneCount = filteredEvents.filter((event) => event.done).length;
 
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
-        <KpiTile label="Total de eventos" value={events.length} icon={CalendarIcon} />
+        <KpiTile label="Total de eventos" value={filteredEvents.length} icon={CalendarIcon} />
         <KpiTile label="Pendentes" value={todoCount} icon={Bell} tone="primary" />
         <KpiTile label="Alta prioridade" value={totalAlta} icon={Bell} tone="danger" />
         <KpiTile label="Concluídos" value={doneCount} icon={Check} tone="success" />
@@ -136,6 +146,24 @@ export default function CalendarioPage() {
           className="xl:col-span-2"
           actions={
             <div className="flex w-full flex-wrap items-center gap-1.5 sm:w-auto">
+              <Select value={filterCategory} onValueChange={(value) => setFilterCategory(value as "all" | EventCategory)}>
+                <SelectTrigger className="h-8 w-[140px] rounded-full"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos tipos</SelectItem>
+                  {Object.entries(EVENT_CATEGORY_LABEL).map(([key, label]) => (
+                    <SelectItem key={key} value={key}>{label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={filterProperty} onValueChange={setFilterProperty}>
+                <SelectTrigger className="h-8 w-[160px] rounded-full"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas propriedades</SelectItem>
+                  {properties.map((property) => (
+                    <SelectItem key={property.id} value={property.id}>{property.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <Button
                 size="icon"
                 variant="outline"
@@ -377,6 +405,8 @@ export default function CalendarioPage() {
           <EventForm
             initialDate={selected}
             properties={properties}
+            crops={crops}
+            livestock={livestock}
             onSave={(data) => {
               addEvent(data);
               toast.success("Lembrete adicionado");
@@ -426,10 +456,14 @@ function KpiTile({
 function EventForm({
   initialDate,
   properties,
+  crops,
+  livestock,
   onSave,
 }: {
   initialDate: Date;
   properties: ReturnType<typeof useFarm>["properties"];
+  crops: ReturnType<typeof useFarm>["crops"];
+  livestock: ReturnType<typeof useFarm>["livestock"];
   onSave: (event: Omit<FarmEvent, "id">) => void;
 }) {
   const [date, setDate] = useState<Date>(initialDate);
@@ -437,9 +471,11 @@ function EventForm({
     title: "",
     description: "",
     time: "",
-    category: "outro" as EventCategory,
+    category: "tarefa" as EventCategory,
     priority: "media" as EventPriority,
     propertyId: "",
+    cropId: "",
+    livestockId: "",
   });
 
   return (
@@ -457,6 +493,8 @@ function EventForm({
           category: form.category,
           priority: form.priority,
           propertyId: form.propertyId || undefined,
+          cropId: form.cropId || undefined,
+          livestockId: form.livestockId || undefined,
         });
       }}
     >
@@ -541,6 +579,36 @@ function EventForm({
               <SelectItem value="none">- nenhuma -</SelectItem>
               {properties.map((property) => (
                 <SelectItem key={property.id} value={property.id}>{property.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label>Plantação relacionada</Label>
+          <Select
+            value={form.cropId || "none"}
+            onValueChange={(value) => setForm({ ...form, cropId: value === "none" ? "" : value })}
+          >
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">- nenhuma -</SelectItem>
+              {crops.map((crop) => (
+                <SelectItem key={crop.id} value={crop.id}>{crop.culture} - {crop.season}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label>Rebanho relacionado</Label>
+          <Select
+            value={form.livestockId || "none"}
+            onValueChange={(value) => setForm({ ...form, livestockId: value === "none" ? "" : value })}
+          >
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">- nenhum -</SelectItem>
+              {livestock.map((item) => (
+                <SelectItem key={item.id} value={item.id}>{item.tag}</SelectItem>
               ))}
             </SelectContent>
           </Select>
