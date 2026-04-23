@@ -21,23 +21,24 @@ const toneMap: Record<NonNullable<Props["tone"]>, string> = {
 
 export function StatCard({ label, value, hint, icon: Icon, tone = "primary", trend }: Props) {
   return (
-    <div className="group relative overflow-hidden rounded-2xl border border-border bg-gradient-card p-5 shadow-card transition-all hover:-translate-y-0.5 hover:shadow-elegant">
+    <div className="group relative overflow-hidden rounded-2xl border border-border/80 bg-gradient-panel p-5 shadow-card transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-elegant">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
             {label}
           </p>
-          <p className="mt-2 font-display text-2xl font-bold tracking-tight text-foreground">
+          <p className="mt-2 font-display text-2xl font-extrabold tracking-tight text-foreground">
             {value}
           </p>
           {hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
         </div>
-        <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl", toneMap[tone])}>
+        <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-sm ring-1 ring-inset ring-white/10", toneMap[tone])}>
           <Icon className="h-5 w-5" />
         </div>
       </div>
       {trend && (
-        <div className="mt-3 inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-[11px] font-medium">
+        <div className="mt-3 inline-flex items-center gap-1 rounded-full border border-border/70 bg-secondary/75 px-2 py-0.5 text-[11px] font-medium">
           <span className={cn(trend.up ? "text-success" : "text-danger")}>
             {trend.up ? "▲" : "▼"} {trend.value}
           </span>

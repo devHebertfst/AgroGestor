@@ -10,7 +10,7 @@ All colors MUST be HSL.
   :root {
     /* AgroGestor — sober & professional palette
        Neutral cool slate base + deep forest green primary + muted gold accent. */
-    --background: 210 20% 98%;
+    --background: 210 24% 97%;
     --foreground: 215 25% 14%;
 
     --card: 0 0% 100%;
@@ -24,7 +24,7 @@ All colors MUST be HSL.
     --primary-foreground: 210 20% 98%;
     --primary-glow: 152 30% 36%;
 
-    --secondary: 210 18% 95%;
+    --secondary: 210 20% 94%;
     --secondary-foreground: 215 25% 18%;
 
     --muted: 210 16% 95%;
@@ -44,8 +44,8 @@ All colors MUST be HSL.
     --destructive: 4 62% 46%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 215 16% 88%;
-    --input: 215 16% 88%;
+    --border: 215 18% 86%;
+    --input: 215 18% 86%;
     --ring: 152 42% 28%;
 
     --radius: 0.75rem;
@@ -53,11 +53,12 @@ All colors MUST be HSL.
     /* Gradients & shadows — restrained */
     --gradient-primary: linear-gradient(135deg, hsl(152 42% 18%), hsl(152 38% 30%));
     --gradient-earth: linear-gradient(135deg, hsl(215 30% 16%) 0%, hsl(152 42% 22%) 55%, hsl(152 30% 30%) 100%);
-    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(210 20% 98.5%) 100%);
-    --shadow-card: 0 1px 2px hsl(215 25% 14% / 0.04), 0 6px 20px -10px hsl(215 25% 14% / 0.08);
-    --shadow-elegant: 0 12px 40px -18px hsl(152 42% 18% / 0.35);
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(210 28% 98%) 100%);
+    --gradient-panel: radial-gradient(circle at top left, hsl(152 42% 92%) 0%, transparent 34%), linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(210 24% 98%) 100%);
+    --shadow-card: 0 1px 2px hsl(215 25% 14% / 0.05), 0 10px 30px -18px hsl(215 25% 14% / 0.18);
+    --shadow-elegant: 0 18px 55px -28px hsl(152 42% 18% / 0.38);
 
-    --sidebar-background: 215 28% 12%;
+    --sidebar-background: 214 32% 10%;
     --sidebar-foreground: 210 16% 78%;
     --sidebar-primary: 152 38% 60%;
     --sidebar-primary-foreground: 215 28% 12%;
@@ -111,6 +112,7 @@ All colors MUST be HSL.
     --gradient-primary: linear-gradient(135deg, hsl(152 42% 36%), hsl(152 42% 52%));
     --gradient-earth: linear-gradient(135deg, hsl(220 16% 14%) 0%, hsl(152 30% 22%) 60%, hsl(152 30% 30%) 100%);
     --gradient-card: linear-gradient(180deg, hsl(220 13% 13%) 0%, hsl(220 13% 11%) 100%);
+    --gradient-panel: radial-gradient(circle at top left, hsl(152 38% 20% / 0.55) 0%, transparent 32%), linear-gradient(180deg, hsl(220 13% 13%) 0%, hsl(220 13% 11%) 100%);
     --shadow-card: 0 1px 2px hsl(0 0% 0% / 0.4), 0 8px 24px -12px hsl(0 0% 0% / 0.5);
     --shadow-elegant: 0 14px 50px -20px hsl(0 0% 0% / 0.6);
 
@@ -132,6 +134,10 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground antialiased;
+    background-image:
+      radial-gradient(circle at top left, hsl(var(--primary) / 0.08), transparent 28rem),
+      radial-gradient(circle at bottom right, hsl(var(--accent) / 0.06), transparent 26rem);
+    background-attachment: fixed;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 }
@@ -140,6 +146,22 @@ All colors MUST be HSL.
   .bg-gradient-primary { background: var(--gradient-primary); }
   .bg-gradient-earth { background: var(--gradient-earth); }
   .bg-gradient-card { background: var(--gradient-card); }
+  .bg-gradient-panel { background: var(--gradient-panel); }
   .shadow-card { box-shadow: var(--shadow-card); }
   .shadow-elegant { box-shadow: var(--shadow-elegant); }
+  .table-premium {
+    @apply w-full text-sm;
+  }
+  .table-premium thead {
+    @apply bg-secondary/70 text-xs uppercase tracking-wider text-muted-foreground;
+  }
+  .table-premium th {
+    @apply px-4 py-3 font-semibold;
+  }
+  .table-premium td {
+    @apply px-4 py-3;
+  }
+  .table-premium tbody tr {
+    @apply border-t border-border transition-colors hover:bg-secondary/45;
+  }
 }
