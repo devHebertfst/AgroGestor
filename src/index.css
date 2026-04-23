@@ -1,0 +1,145 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* AgroGestor — sober & professional palette
+       Neutral cool slate base + deep forest green primary + muted gold accent. */
+    --background: 210 20% 98%;
+    --foreground: 215 25% 14%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 215 25% 14%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 25% 14%;
+
+    /* Deep moss / forest green */
+    --primary: 152 42% 22%;
+    --primary-foreground: 210 20% 98%;
+    --primary-glow: 152 30% 36%;
+
+    --secondary: 210 18% 95%;
+    --secondary-foreground: 215 25% 18%;
+
+    --muted: 210 16% 95%;
+    --muted-foreground: 215 14% 42%;
+
+    /* Muted warm gold/ochre — discreet accent */
+    --accent: 38 55% 48%;
+    --accent-foreground: 0 0% 100%;
+
+    --success: 152 48% 32%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 70% 45%;
+    --warning-foreground: 0 0% 100%;
+    --danger: 4 62% 46%;
+    --danger-foreground: 0 0% 100%;
+
+    --destructive: 4 62% 46%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 215 16% 88%;
+    --input: 215 16% 88%;
+    --ring: 152 42% 28%;
+
+    --radius: 0.75rem;
+
+    /* Gradients & shadows — restrained */
+    --gradient-primary: linear-gradient(135deg, hsl(152 42% 18%), hsl(152 38% 30%));
+    --gradient-earth: linear-gradient(135deg, hsl(215 30% 16%) 0%, hsl(152 42% 22%) 55%, hsl(152 30% 30%) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(210 20% 98.5%) 100%);
+    --shadow-card: 0 1px 2px hsl(215 25% 14% / 0.04), 0 6px 20px -10px hsl(215 25% 14% / 0.08);
+    --shadow-elegant: 0 12px 40px -18px hsl(152 42% 18% / 0.35);
+
+    --sidebar-background: 215 28% 12%;
+    --sidebar-foreground: 210 16% 78%;
+    --sidebar-primary: 152 38% 60%;
+    --sidebar-primary-foreground: 215 28% 12%;
+    --sidebar-accent: 215 25% 17%;
+    --sidebar-accent-foreground: 210 20% 96%;
+    --sidebar-border: 215 22% 18%;
+    --sidebar-ring: 152 38% 55%;
+  }
+
+  .dark {
+    /* Graphite dark — cool neutral, low chroma, true depth.
+       No saturated greens in the surfaces; keep accents controlled. */
+    --background: 220 14% 7%;
+    --foreground: 210 20% 96%;
+
+    --card: 220 13% 12%;
+    --card-foreground: 210 20% 96%;
+
+    --popover: 220 13% 12%;
+    --popover-foreground: 210 20% 96%;
+
+    /* Brighter mossy green that stays readable on dark */
+    --primary: 152 42% 62%;
+    --primary-foreground: 220 18% 10%;
+    --primary-glow: 152 45% 68%;
+
+    --secondary: 220 12% 18%;
+    --secondary-foreground: 210 20% 96%;
+
+    --muted: 220 12% 18%;
+    --muted-foreground: 212 14% 74%;
+
+    /* Soft amber accent */
+    --accent: 38 64% 64%;
+    --accent-foreground: 220 18% 10%;
+
+    --success: 152 48% 58%;
+    --success-foreground: 220 18% 10%;
+    --warning: 42 80% 66%;
+    --warning-foreground: 220 18% 10%;
+    --danger: 4 68% 66%;
+    --danger-foreground: 220 18% 10%;
+
+    --destructive: 4 68% 56%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 12% 24%;
+    --input: 220 12% 24%;
+    --ring: 152 42% 62%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(152 42% 36%), hsl(152 42% 52%));
+    --gradient-earth: linear-gradient(135deg, hsl(220 16% 14%) 0%, hsl(152 30% 22%) 60%, hsl(152 30% 30%) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(220 13% 13%) 0%, hsl(220 13% 11%) 100%);
+    --shadow-card: 0 1px 2px hsl(0 0% 0% / 0.4), 0 8px 24px -12px hsl(0 0% 0% / 0.5);
+    --shadow-elegant: 0 14px 50px -20px hsl(0 0% 0% / 0.6);
+
+    --sidebar-background: 220 16% 9%;
+    --sidebar-foreground: 210 18% 88%;
+    --sidebar-primary: 152 42% 64%;
+    --sidebar-primary-foreground: 220 18% 10%;
+    --sidebar-accent: 220 14% 18%;
+    --sidebar-accent-foreground: 210 20% 96%;
+    --sidebar-border: 220 14% 24%;
+    --sidebar-ring: 152 42% 62%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+}
+
+@layer utilities {
+  .bg-gradient-primary { background: var(--gradient-primary); }
+  .bg-gradient-earth { background: var(--gradient-earth); }
+  .bg-gradient-card { background: var(--gradient-card); }
+  .shadow-card { box-shadow: var(--shadow-card); }
+  .shadow-elegant { box-shadow: var(--shadow-elegant); }
+}
