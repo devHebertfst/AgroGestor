@@ -64,15 +64,15 @@ const priorityTone: Record<EventPriority, string> = {
   baixa: "bg-muted text-muted-foreground",
 };
 
-const isoOf = (d: Date) =>
-  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const isoOf = (date: Date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 
 export default function CalendarioPage() {
   const { events, properties, addEvent, removeEvent, toggleEventDone } = useFarm();
   const [cursor, setCursor] = useState(() => {
-    const d = new Date();
-    d.setDate(1);
-    return d;
+    const date = new Date();
+    date.setDate(1);
+    return date;
   });
   const [selected, setSelected] = useState<Date>(new Date());
   const [open, setOpen] = useState(false);
@@ -80,20 +80,23 @@ export default function CalendarioPage() {
   const grid = useMemo(() => {
     const first = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
     const startOffset = first.getDay();
-    return Array.from({ length: 42 }, (_, i) => {
-      const d = new Date(first);
-      d.setDate(1 - startOffset + i);
-      return d;
+
+    return Array.from({ length: 42 }, (_, index) => {
+      const date = new Date(first);
+      date.setDate(1 - startOffset + index);
+      return date;
     });
   }, [cursor]);
 
   const eventsByDay = useMemo(() => {
     const map = new Map<string, FarmEvent[]>();
+
     events.forEach((event) => {
       const items = map.get(event.date) ?? [];
       items.push(event);
       map.set(event.date, items);
     });
+
     return map;
   }, [events]);
 
@@ -104,6 +107,7 @@ export default function CalendarioPage() {
 
   const upcoming = useMemo(() => {
     const todayISO = isoOf(new Date());
+
     return [...events]
       .filter((event) => event.date >= todayISO && !event.done)
       .sort((a, b) => a.date.localeCompare(b.date) || (a.time ?? "").localeCompare(b.time ?? ""))
@@ -111,32 +115,33 @@ export default function CalendarioPage() {
   }, [events]);
 
   const monthLabel = format(cursor, "MMMM yyyy", { locale: ptBR });
-  const weekDays = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+  const weekDays = ["D", "S", "T", "Q", "Q", "S", "S"];
   const totalAlta = events.filter((event) => event.priority === "alta" && !event.done).length;
   const todoCount = events.filter((event) => !event.done).length;
   const doneCount = events.filter((event) => event.done).length;
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
         <KpiTile label="Total de eventos" value={events.length} icon={CalendarIcon} />
         <KpiTile label="Pendentes" value={todoCount} icon={Bell} tone="primary" />
         <KpiTile label="Alta prioridade" value={totalAlta} icon={Bell} tone="danger" />
         <KpiTile label="Concluídos" value={doneCount} icon={Check} tone="success" />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid gap-4 xl:grid-cols-3">
         <SectionCard
           title="Agenda"
           subtitle={monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1)}
-          className="lg:col-span-2"
+          className="xl:col-span-2"
           actions={
-            <div className="flex flex-wrap items-center gap-1.5">
+            <div className="flex w-full flex-wrap items-center gap-1.5 sm:w-auto">
               <Button
                 size="icon"
                 variant="outline"
                 className="h-8 w-8 rounded-full"
                 onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))}
+                aria-label="Mês anterior"
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
@@ -145,9 +150,9 @@ export default function CalendarioPage() {
                 size="sm"
                 className="h-8 rounded-full"
                 onClick={() => {
-                  const d = new Date();
-                  d.setDate(1);
-                  setCursor(d);
+                  const date = new Date();
+                  date.setDate(1);
+                  setCursor(date);
                   setSelected(new Date());
                 }}
               >
@@ -158,81 +163,95 @@ export default function CalendarioPage() {
                 variant="outline"
                 className="h-8 w-8 rounded-full"
                 onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))}
+                aria-label="Próximo mês"
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>
-              <Button size="sm" className="h-8 rounded-full sm:ml-2" onClick={() => setOpen(true)}>
+              <Button size="sm" className="h-8 flex-1 rounded-full sm:ml-2 sm:flex-none" onClick={() => setOpen(true)}>
                 <Plus className="mr-1 h-4 w-4" /> Novo lembrete
               </Button>
             </div>
           }
         >
-          <div className="overflow-x-auto pb-1">
-            <div className="min-w-[620px]">
-              <div className="grid grid-cols-7 gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                {weekDays.map((day) => (
-                  <div key={day} className="px-2 py-1 text-center">
-                    {day}
-                  </div>
-                ))}
+          <div className="grid grid-cols-7 gap-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground sm:gap-1.5 sm:text-[11px]">
+            {weekDays.map((day, index) => (
+              <div key={`${day}-${index}`} className="px-1 py-1 text-center sm:px-2">
+                {day}
               </div>
-              <div className="mt-1 grid grid-cols-7 gap-1.5">
-                {grid.map((day, index) => {
-                  const iso = isoOf(day);
-                  const inMonth = day.getMonth() === cursor.getMonth();
-                  const isToday = iso === isoOf(new Date());
-                  const isSelected = iso === selectedISO;
-                  const dayEventsList = eventsByDay.get(iso) ?? [];
+            ))}
+          </div>
 
-                  return (
-                    <button
-                      key={index}
-                      onClick={() => setSelected(day)}
-                      className={cn(
-                        "group relative flex h-24 flex-col items-stretch rounded-lg border bg-card p-1.5 text-left transition",
-                        "hover:border-primary/40 hover:shadow-card",
-                        inMonth ? "border-border" : "border-transparent bg-secondary/30 text-muted-foreground/70",
-                        isSelected && "border-primary/70 ring-2 ring-primary/20",
-                      )}
-                    >
+          <div className="mt-1 grid grid-cols-7 gap-1 sm:gap-1.5">
+            {grid.map((day, index) => {
+              const iso = isoOf(day);
+              const inMonth = day.getMonth() === cursor.getMonth();
+              const isToday = iso === isoOf(new Date());
+              const isSelected = iso === selectedISO;
+              const dayEventsList = eventsByDay.get(iso) ?? [];
+
+              return (
+                <button
+                  key={index}
+                  onClick={() => setSelected(day)}
+                  className={cn(
+                    "group relative flex h-14 min-w-0 flex-col items-center rounded-lg border bg-card p-1 text-left transition sm:h-20 sm:items-stretch sm:p-1.5 lg:h-24",
+                    "hover:border-primary/40 hover:shadow-card",
+                    inMonth ? "border-border" : "border-transparent bg-secondary/30 text-muted-foreground/70",
+                    isSelected && "border-primary/70 ring-2 ring-primary/20",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold",
+                      isToday ? "bg-primary text-primary-foreground" : "text-foreground/80",
+                    )}
+                  >
+                    {day.getDate()}
+                  </span>
+
+                  <div className="mt-auto flex min-h-3 items-center justify-center gap-0.5 sm:hidden">
+                    {dayEventsList.slice(0, 3).map((event) => (
                       <span
+                        key={event.id}
                         className={cn(
-                          "mb-1 inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold",
-                          isToday ? "bg-primary text-primary-foreground" : "text-foreground/80",
+                          "h-1.5 w-1.5 rounded-full",
+                          event.priority === "alta" ? "bg-danger" : event.priority === "media" ? "bg-warning" : "bg-primary",
+                        )}
+                      />
+                    ))}
+                    {dayEventsList.length > 3 && (
+                      <span className="text-[9px] font-medium text-muted-foreground">+{dayEventsList.length - 3}</span>
+                    )}
+                  </div>
+
+                  <div className="mt-1 hidden space-y-0.5 overflow-hidden sm:block">
+                    {dayEventsList.slice(0, 2).map((event) => (
+                      <div
+                        key={event.id}
+                        className={cn(
+                          "truncate rounded border px-1.5 py-0.5 text-[10px] font-medium",
+                          categoryTone[event.category],
+                          event.done && "line-through opacity-60",
                         )}
                       >
-                        {day.getDate()}
-                      </span>
-                      <div className="space-y-0.5 overflow-hidden">
-                        {dayEventsList.slice(0, 2).map((event) => (
-                          <div
-                            key={event.id}
-                            className={cn(
-                              "truncate rounded border px-1.5 py-0.5 text-[10px] font-medium",
-                              categoryTone[event.category],
-                              event.done && "line-through opacity-60",
-                            )}
-                          >
-                            {event.time && <span className="opacity-70">{event.time} · </span>}
-                            {event.title}
-                          </div>
-                        ))}
-                        {dayEventsList.length > 2 && (
-                          <div className="px-1.5 text-[10px] text-muted-foreground">
-                            +{dayEventsList.length - 2} mais
-                          </div>
-                        )}
+                        {event.time && <span className="opacity-70">{event.time} · </span>}
+                        {event.title}
                       </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+                    ))}
+                    {dayEventsList.length > 2 && (
+                      <div className="px-1.5 text-[10px] text-muted-foreground">
+                        +{dayEventsList.length - 2} mais
+                      </div>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </SectionCard>
 
         <SectionCard
-          title={format(selected, "EEEE, dd 'de' MMMM", { locale: ptBR }).replace(/^\w/, (c) => c.toUpperCase())}
+          title={format(selected, "EEEE, dd 'de' MMMM", { locale: ptBR }).replace(/^\w/, (letter) => letter.toUpperCase())}
           subtitle={`${dayEvents.length} ${dayEvents.length === 1 ? "evento" : "eventos"}`}
           actions={
             <Button size="sm" variant="outline" className="rounded-full" onClick={() => setOpen(true)}>
@@ -249,7 +268,7 @@ export default function CalendarioPage() {
           ) : (
             <ul className="space-y-2.5">
               {dayEvents.map((event) => {
-                const property = properties.find((p) => p.id === event.propertyId);
+                const property = properties.find((item) => item.id === event.propertyId);
 
                 return (
                   <li
@@ -315,30 +334,30 @@ export default function CalendarioPage() {
         {upcoming.length === 0 ? (
           <p className="text-sm text-muted-foreground">Nenhum lembrete pendente.</p>
         ) : (
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {upcoming.map((event) => {
-              const property = properties.find((p) => p.id === event.propertyId);
+              const property = properties.find((item) => item.id === event.propertyId);
               const date = parseISODateLocal(event.date);
 
               return (
-                <div key={event.id} className="flex items-start gap-3 rounded-xl border border-border bg-card p-3 shadow-card">
+                <div key={event.id} className="grid grid-cols-[2.75rem_minmax(0,1fr)] gap-3 rounded-xl border border-border bg-card p-3 shadow-card">
                   <div className="flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-lg bg-primary/10 text-primary">
                     <span className="text-[10px] font-semibold uppercase">
                       {format(date, "MMM", { locale: ptBR })}
                     </span>
                     <span className="text-base font-bold leading-none">{date.getDate()}</span>
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-foreground">{event.title}</p>
-                    <p className="text-xs text-muted-foreground">
+                  <div className="min-w-0">
+                    <p className="break-words text-sm font-semibold leading-snug text-foreground">{event.title}</p>
+                    <p className="mt-0.5 break-words text-xs text-muted-foreground">
                       {event.time ? `${event.time} · ` : ""}
                       {property?.name ?? "-"}
                     </p>
                     <div className="mt-1 flex flex-wrap gap-1.5">
-                      <Badge className={cn("rounded-full border text-[10px]", categoryTone[event.category])}>
+                      <Badge className={cn("max-w-full rounded-full border text-[10px]", categoryTone[event.category])}>
                         {EVENT_CATEGORY_LABEL[event.category]}
                       </Badge>
-                      <Badge className={cn("rounded-full text-[10px]", priorityTone[event.priority])}>
+                      <Badge className={cn("max-w-full rounded-full text-[10px]", priorityTone[event.priority])}>
                         {EVENT_PRIORITY_LABEL[event.priority]}
                       </Badge>
                     </div>
@@ -390,13 +409,13 @@ function KpiTile({
   }[tone];
 
   return (
-    <div className="rounded-2xl border border-border bg-gradient-card p-5 shadow-card">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{label}</p>
-          <p className="mt-2 font-display text-3xl font-bold text-foreground">{value}</p>
+    <div className="rounded-2xl border border-border bg-gradient-card p-4 shadow-card sm:p-5">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground sm:text-[11px]">{label}</p>
+          <p className="mt-2 font-display text-2xl font-bold text-foreground sm:text-3xl">{value}</p>
         </div>
-        <div className={cn("flex h-10 w-10 items-center justify-center rounded-xl", toneCls)}>
+        <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-xl sm:h-10 sm:w-10", toneCls)}>
           <Icon className="h-5 w-5" />
         </div>
       </div>

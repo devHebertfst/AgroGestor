@@ -1,12 +1,12 @@
 import {
+  BarChart3,
+  Beef,
+  CalendarDays,
   LayoutDashboard,
-  Wallet,
+  Leaf,
   MapPinned,
   Sprout,
-  Beef,
-  BarChart3,
-  Leaf,
-  CalendarDays,
+  Wallet,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
@@ -14,13 +14,13 @@ import {
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { cn } from "@/lib/utils";
 
 const items = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard, end: true },
@@ -37,9 +37,9 @@ export function AppSidebar() {
   const collapsed = state === "collapsed";
 
   return (
-    <Sidebar collapsible="icon" className="border-r-0">
-      <SidebarHeader className="border-b border-sidebar-border px-4 py-5">
-        <div className="flex items-center gap-2.5">
+    <Sidebar collapsible="offcanvas" className="border-r-0">
+      <SidebarHeader className={cn("border-b border-sidebar-border py-5", collapsed ? "items-center px-2" : "px-4")}>
+        <div className={cn("flex items-center", collapsed ? "justify-center" : "gap-2.5")}>
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-sidebar-primary text-sidebar-primary-foreground shadow-elegant">
             <Leaf className="h-5 w-5" />
           </div>
@@ -58,18 +58,18 @@ export function AppSidebar() {
 
       <SidebarContent className="px-2 py-4">
         <SidebarGroup>
-          <SidebarGroupLabel className="text-sidebar-foreground/70">
-            Operação
-          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild className="h-10 rounded-lg">
+                  <SidebarMenuButton asChild tooltip={item.title} className="h-10 rounded-lg">
                     <NavLink
                       to={item.url}
                       end={item.end}
-                      className="flex items-center gap-3 px-3 text-sm text-sidebar-foreground/90 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                      className={cn(
+                        "flex h-full w-full items-center text-sm text-sidebar-foreground/90 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                        collapsed ? "justify-center px-0" : "gap-3 px-3",
+                      )}
                       activeClassName="bg-sidebar-accent text-sidebar-primary font-semibold"
                     >
                       <item.icon className="h-[18px] w-[18px] shrink-0" />
